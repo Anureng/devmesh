@@ -3,13 +3,13 @@ services:
     image: postgres:16-alpine
     container_name: facedet_db
     environment:
-      POSTGRES_USER: facedet
-      POSTGRES_PASSWORD: facedet
-      POSTGRES_DB: facedetdb
+      POSTGRES_USER: ${POSTGRES_USER:-facedet}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-facedet}
+      POSTGRES_DB: ${POSTGRES_DB:-facedetdb}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U facedet -d facedetdb" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-facedet} -d ${POSTGRES_DB:-facedetdb}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -19,8 +19,8 @@ services:
     container_name: facedet_backend
     ports:
       - "8000:8000"
-    environment:
-      DATABASE_URL: postgresql+asyncpg://facedet:facedet@db:5432/facedetdb
+    env_file:
+      - ./backend/.env
     depends_on:
       db:
         condition: service_healthy
