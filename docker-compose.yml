@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: facedet_db
+    environment:
+      POSTGRES_USER: facedet
+      POSTGRES_PASSWORD: facedet
+      POSTGRES_DB: facedetdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U facedet -d facedetdb" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: facedet_backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://facedet:facedet@db:5432/facedetdb
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: facedet_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
